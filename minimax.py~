@@ -1,0 +1,15 @@
+
+
+def minimax(parent, level):
+    parent.level = level
+    if parent.end:
+        parent.getScore()
+        #return parent
+    else:
+        parent.getChildren()
+        for child in parent.children:
+            minimax(child, level+=1)
+        parent.getScoreFromChildren()
+        
+
+    

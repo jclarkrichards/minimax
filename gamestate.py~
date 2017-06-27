@@ -1,0 +1,20 @@
+class GameState(object):
+    def __init__(self):
+        #parent and children are of type GameState
+        self.parent = None
+        self.children = []
+        self.level = 0 #level this state was created on
+        self.score = 0 
+        
+    def getScoreFromChildren(self):
+        '''Ask children for scores and choose'''
+        scores = [child.score for child in self.children]
+        if self.level % 2: #level is odd
+            
+        else: #level is even
+            pass
+
+    
+        
+
+    
