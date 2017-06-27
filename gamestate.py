@@ -10,14 +10,20 @@ class GameState(object):
         self.level = 0 #level this state was created on
         self.score = 0 
         
+    def isEven(self, value):
+        '''Checks whether value is odd or even.  False if odd'''
+        if value % 2:
+            return False
+        return True
+
     def getScoreFromChildren(self):
         '''Ask children for scores and choose'''
         scores = [child.score for child in self.children]
         #print scores
-        if self.level % 2: #level is odd
-            self.score = min(scores)
-        else: #level is even
+        if self.isEven(self.level): #level is even
             self.score = max(scores)
+        else: #level is even
+            self.score = min(scores)
         
         #More than one child has the same best score
         if scores.count(self.score) > 1:
@@ -29,7 +35,7 @@ class GameState(object):
                     levels.append(child.bestChild.level)
                 else:
                     levels.append(child.level)
-            print levels
+            #print levels
             level = min(levels)
             if levels.count(level) > 1:
                 num = levels.count(level)
@@ -75,47 +81,37 @@ class TicTacToeState(GameState):
         if xwin == owin == 0 or xwin == owin:
             pass #TIE
         else:
-            empty = 0
-            for i in range(len(self.state)):
-                if self.state[i] == -1:
-                    empty += 1
-            if (empty + self.level) % 2: #odd so X is root
-                #print "X is root"
-                if xwin:
+            indices = self.emptySpaces()
+
+            if self.isEven(len(indices)+self.level): #Even so O is root
+                if owin:
                     self.score = 1
                 else:
                     self.score = -1
-            else: #Even so O is root
-                #print "O is root"
-                if owin:
+            else: #Odd so X is root
+                if xwin:
                     self.score = 1
                 else:
                     self.score = -1
 
     def getChildren(self):
-        '''Create next states based on current state'''
-        indices = []
-        for i in range(len(self.state)):
-            if self.state[i] == -1:
-                indices.append(i)
-        if len(indices) % 2: #odd number of spaces, place an X
-            for index in indices:
-                state = self.state[:]
-                state[index] = 1
-                self.children.append(TicTacToeState(state))
-        else: #even number of spaces, place an O
-            for index in indices:
-                state = self.state[:]
-                state[index] = 0
-                self.children.append(TicTacToeState(state))
+        '''Create next states based on current state.  The number of children
+        is the same as the number of empty spaces'''
+        indices = self.emptySpaces()
+        if self.isEven(len(indices)): #Even spaces, place an O
+            piece = 0
+        else: #odd number of spaces, place an X
+            piece = 1
+
+        for index in indices:
+            state = self.state[:]
+            state[index] = piece
+            self.children.append(TicTacToeState(state))
         
     def checkEndState(self):
         '''This is an endstate if there are no more empty spaces'''
         self.end = False
-        indices = []
-        for i in range(len(self.state)):
-            if self.state[i] == -1:
-                indices.append(i)
+        indices = self.emptySpaces()
         if len(indices) == 0:
             self.end = True
             
@@ -123,9 +119,17 @@ class TicTacToeState(GameState):
         xwin, owin = self.checkWin()
         if xwin or owin:
             self.end = True
-
+            
+    def emptySpaces(self):
+        '''Get indices of empty spaces'''
+        indices = []
+        for i in range(len(self.state)):
+            if self.state[i] == -1:
+                indices.append(i)
+        return indices
         
     def __repr__(self):
+        '''How do we want to represent this object?'''
         XO = []
         for i in range(len(self.state)):
             if self.state[i] == 1:
