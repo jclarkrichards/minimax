@@ -1,11 +1,15 @@
-from gamestate import TicTacToeState
+from gamestate import TicTacToeState, Eclipse
 
 def minimax(parent, level=0):
+    print level
     parent.level = level
     if parent.end:
         parent.getScore()
     else:
         parent.getChildren()
+        print "children = " + str(len(parent.children))
+        if len(parent.children) == 0:
+            print parent.state
         for child in parent.children:
             minimax(child, level=level+1)
         parent.getScoreFromChildren()
@@ -17,6 +21,14 @@ def printTree(parent):
         printTree(child)
 
 
+board = [-1,0,1,0,1,-1,0,2,1,-2,-2,0,-1,0,2,2]
+state = Eclipse(board)
+minimax(state)
+print state.state
+print ""
+print state.bestChild.state
+
+"""
 XPlayer = True #Human player
 xturn = True
 gameover = False
@@ -44,5 +56,5 @@ while not gameover:
 
 print "GAME OVER"
 print state
-            
+"""            
     
