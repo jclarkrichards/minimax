@@ -1,0 +1,28 @@
+def stacksort(items):
+    stacks = []
+    for item in items:
+        if len(stacks) == 0:
+            stack = [item]
+            stacks.append(stack)
+        else:
+            added = False
+            for stack in stacks:
+                if item <= stack[-1]:
+                    stack.append(item)
+                    added = True
+                    break
+            if not added:
+                stack = [item]
+                stacks.append(stack)
+
+    
+    sorted = []
+    for stack in stacks:
+        stack.reverse()
+        sorted += stack
+        
+    #for i in range(len(items)):
+    #    for stack in stacks:
+    #        if len(stack) > 0:
+                
+    return sorted

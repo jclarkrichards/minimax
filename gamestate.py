@@ -8,7 +8,8 @@ class GameState(object):
         self.children = []
         self.bestChild = None
         self.level = 0 #level this state was created on
-        self.score = 0 
+        self.score = 0
+        self.prescore = 0 #an initial score, not a final one
         self.emptyVal = -1
 
     def isEven(self, value):
@@ -169,23 +170,24 @@ class Eclipse(GameState):
         self.moonGold = -2
         self.sun = [self.sunSilver, self.sunGold]
         self.moon = [self.moonSilver, self.moonGold]
-        self.pieces = [self.sunSilver, self.sunGold, 
-                       self.moonSilver, self.moonGold]
+        #self.pieces = [self.sunSilver, self.sunGold, 
+        #               self.moonSilver, self.moonGold]
+        self.lines = [[0,1,2],[1,2,3],[4,5,6],[5,6,7],
+                      [8,9,10],[9,10,11],[12,13,14],[13,14,15],
+                      [0,4,8],[4,8,12],[1,5,9],[5,9,13],
+                      [2,6,10],[6,10,14],[3,7,11],[7,11,15],
+                      [1,6,11],[0,5,10],[5,10,15],[4,9,14],
+                      [2,5,8],[3,6,9],[6,9,12],[7,10,13]]
+        
         self.checkEndState()
         
     def checkWin(self):
         '''To win all pieces must be the same and all adjacent spaces
         cannot be empty'''
-        wins = [[0,1,2],[1,2,3],[4,5,6],[5,6,7],
-                [8,9,10],[9,10,11],[12,13,14],[13,14,15],
-                [0,4,8],[4,8,12],[1,5,9],[5,9,13],
-                [2,6,10],[6,10,14],[3,7,11],[7,11,15],
-                [1,6,11],[0,5,10],[5,10,15],[4,9,14],
-                [2,5,8],[3,6,9],[6,9,12],[7,10,13]]
         sunwin = 0
         moonwin = 0
-
-        for win in wins:
+        
+        for win in self.lines:
             for sun in self.sun:
                 locked = self.checkLockedPieces(win, sun)
                 if locked:
@@ -211,13 +213,6 @@ class Eclipse(GameState):
         '''Get all possible children of this state'''
         if self.sunIsRoot():
             moonIndices = self.getPlayerIndices(self.moon)
-            #if len(moonIndices) == 0:
-            #    empty = self.emptySpaces()
-            #    for ei in empty:
-            #        for side in self.sun:
-            #            state = self.state[:]
-            #            state[ei] = side
-            #            self.children.append(Eclipse(state))
 
             if self.anyAdjacentEmpty(moonIndices):
                 for mi in moonIndices:
@@ -377,6 +372,97 @@ class Eclipse(GameState):
             if len(values) > 0:
                 return True
         return False
+
+    def pruneChildren(self):
+        '''Prune child if prescore is above 4.  Basic and simple, but not the best.'''
+        if len(self.children) > 0:
+            prescores = [c.prescore for c in self.children]
+            #print len(prescores), len(self.children)
+            #badkids = []
+            for i in range(len(prescores)):
+                #print i
+                if prescores[i] > 100:
+                    print self.level
+                    print self.children[i].state
+                    self.children = [self.children[i]]
+                    break
+                #if prescores[i] > 4:
+                #    badkids.append(self.children[i])
+                
+            #for badkid in badkids:
+            #    self.children.remove(badkid)
+
+    def sortChildren(self):
+        '''Sort children based on prescore.  highest to lowest.  Use bubble sort.'''
+        sorted = False
+        temp = 0
+        while not sorted:
+            sorted = True
+            for i in range(len(self.children)-1):
+                if self.children[i].prescore < self.children[i+1].prescore:
+                    temp = self.children[i]
+                    self.children[i] = self.children[i+1]
+                    self.children[i+1] = temp
+                    sorted = False
+                
+
+    #def evaluateChildren(self):
+    #    '''Evaluate children based on number of flips other player can make'''
+    #    if len(self.children) > 0:
+    #        if self.sunIsRoot():
+    #            for child in self.children:
+    #                self.prescore = child.totalNumFlips(True)
+    #        else:
+    #            for child in self.children:
+    #                self.prescore = child.totalNumFlips(False)
+
+    def totalNumFlips(self, evalSun):
+        '''Get the total number of possible flips for a player.  Set as prescore'''
+        flips = 0
+        if evalSun:
+            indices = self.getPlayerIndices(self.sun)
+        else:
+            indices = self.getPlayerIndices(self.moon)
+        for i in indices:
+            empty = self.getAdjacentEmpty(i)
+            flips += len(empty)
+        return flips
+
+    def evaluateChildren(self):
+        '''Evaluate children based on line scores'''
+        if len(self.children) > 0:
+            if self.sunIsRoot():
+                for child in self.children:
+                    for line in self.lines:
+                        for side in self.sun:
+                            if child.allPiecesMatch(line, side):
+                                if child.checkLockedPieces(line, side):
+                                    child.prescore += 100
+                                else:
+                                    child.prescore += 10
+                            else:
+                                if (child.state[line[0]] == child.state[line[1]] == side or
+                                    child.state[line[0]] == child.state[line[2]] == side or
+                                    child.state[line[1]] == child.state[line[2]] == side):
+                                    child.prescore += 1
+            else:
+                for child in self.children:
+                    val = 0
+                    for line in self.lines:
+                        for side in self.moon:
+                            if child.allPiecesMatch(line, side):
+                                if child.checkLockedPieces(line, side):
+                                    child.prescore += 100
+                                else:
+                                    child.prescore += 10
+                            else:
+                                if (child.state[line[0]] == child.state[line[1]] == side or
+                                    child.state[line[0]] == child.state[line[2]] == side or
+                                    child.state[line[1]] == child.state[line[2]] == side):
+                                    child.prescore += 1
+                    
+    def earlyMover(self):
+        pass
 
     def __repr__(self):
         pass

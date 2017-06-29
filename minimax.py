@@ -1,18 +1,28 @@
 from gamestate import TicTacToeState, Eclipse
 
 def minimax(parent, level=0):
-    print level
+    #print level
     parent.level = level
     if parent.end:
         parent.getScore()
     else:
         parent.getChildren()
-        print "children = " + str(len(parent.children))
-        if len(parent.children) == 0:
-            print parent.state
-        for child in parent.children:
-            minimax(child, level=level+1)
-        parent.getScoreFromChildren()
+        #parent.evaluateChildren()
+        #parent.sortChildren()
+        #parent.pruneChildren()
+        #if level < 2:
+        #    print "children = " + str(len(parent.children))
+        #    print [c.prescore for c in parent.children]
+        #print ""
+        #if len(parent.children) == 0:
+        #    print parent.state
+
+        #for i in range(len(parent.children)/2):
+        #    minimax(parent.children[i], level=level+1)
+        if len(parent.children) > 0:
+            for child in parent.children:
+                minimax(child, level=level+1)
+            parent.getScoreFromChildren()
 
 
 def printTree(parent):
@@ -20,8 +30,8 @@ def printTree(parent):
     for child in parent.children:
         printTree(child)
 
-
-board = [-1,0,1,0,1,-1,0,2,1,-2,-2,0,-1,0,2,2]
+#board = [-1,0,-1,-1,2,1,0,2,2,0,1,-2,-2,-1,0,2]
+board = [-1,0,0,0,1,-1,-1,2,1,-2,-2,2,-1,-2,1,2]
 state = Eclipse(board)
 minimax(state)
 print state.state
