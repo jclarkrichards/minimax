@@ -1,13 +1,13 @@
 from random import randint
 
 class GameState(object):
-    def __init__(self, state, level):
+    def __init__(self, state):
         self.state = state #represents this state 
         #parent, children, and bestChild  are of type GameState
         self.parent = None
         self.children = []
         self.bestChild = None
-        self.level = level #level this state was created on
+        self.level = 0 #level this state was created on
         self.score = 0
         self.prescore = 0 #an initial score, not a final one
         self.emptyVal = -1
@@ -29,7 +29,7 @@ class GameState(object):
         return levels
         
     def getScoreFromChildren(self):
-        '''Ask children for scores and choose the best child'''
+        '''Ask children for scores and choose'''
         scores = [child.score for child in self.children]
         #print scores
         if self.isEven(self.level): #level is even
@@ -157,6 +157,13 @@ class TicTacToeState(GameState):
         XO = tuple(XO)
         s = "%s|%s|%s\n- - -\n%s|%s|%s\n- - -\n%s|%s|%s" % XO
         return s
+
+
+#==============================================================================
+class TicTacToe2(TicTacToe):
+    def __init__(self, state):
+        TicTacToe.__init__(self, state)
+
 
 
 #==============================================================================

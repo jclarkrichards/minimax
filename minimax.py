@@ -1,6 +1,67 @@
-from gamestate import TicTacToeState, Eclipse
+#from gamestate import TicTacToeState, Eclipse
 
-def minimax(parent, level=0):
+def minimax(parent):
+    if parent.end:
+        parent.getScore()
+    else:
+        parent.getChildren()
+        if len(parent.children) > 0:
+            for child in parent.children:
+                minimax(child)
+            parent.getScoreFromChildren()
+            #parent.maxLevel = parent.bestChild.maxLevel
+
+
+"""If maxLevel is None, then full depth is searched.  Otherwise the depth will never go below maxLevel"""
+class Minimax(object):
+    def __init__(self):
+        self.maxLevel = None
+        self.num = 0
+
+    def minimax(self, parent):
+        self.num += 1
+        if parent.end:
+            parent.getScore()
+            self.maxLevel = parent.setMaxLevel()
+        else:
+            if self.maxLevel is not None:
+                if parent.level < self.maxLevel:
+                    parent.getChildren()
+            else:
+                parent.getChildren()
+
+            if len(parent.children) > 0:
+                for child in parent.children:
+                    self.minimax(child)
+                parent.getScoreFromChildren()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def minimaxOpt(parent, level=0):
     #print level
     parent.level = level
     if parent.end:
@@ -31,40 +92,10 @@ def printTree(parent):
         printTree(child)
 
 #board = [-1,0,-1,-1,2,1,0,2,2,0,1,-2,-2,-1,0,2]
-board = [-1,0,0,0,1,-1,-1,2,1,-2,-2,2,-1,-2,1,2]
-state = Eclipse(board)
-minimax(state)
-print state.state
-print ""
-print state.bestChild.state
+#board = [-1,0,0,0,1,-1,-1,2,1,-2,-2,2,-1,-2,1,2]
+#state = Eclipse(board)
+#minimax(state)
+#print state.state
+#print ""
+#print state.bestChild.state
 
-"""
-XPlayer = True #Human player
-xturn = True
-gameover = False
-state = TicTacToeState([-1,-1,-1,-1,-1,-1,-1,-1,-1])
-
-print state
-while not gameover:
-    if xturn:
-        if XPlayer:
-            i = int(raw_input("Enter an X at location: (0-8)  "))
-            state.state[i] = 1
-            state = TicTacToeState(state.state)
-        else:
-            pass
-    else:
-        minimax(state)
-        state = state.bestChild
-
-    if state.end:
-        gameover = True
-    else:
-        xturn = not xturn
-    print state
-    print ""
-
-print "GAME OVER"
-print state
-"""            
-    
