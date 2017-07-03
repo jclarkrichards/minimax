@@ -102,6 +102,8 @@ class Eclipse(GameState):
                         state[ei] = side
                         self.children.append(Eclipse(state, level=self.level+1))
 
+        self.evaluateChildren()
+        self.sortChildren()
 
     def createNewState(self):
         pass
@@ -317,7 +319,9 @@ class Eclipse(GameState):
 
 
         
-board = [-1,0,-1,0,2,1,0,0,2,0,1,-2,0,-1,0,2]                                
+board = [0,0,-1,0,2,1,0,0,2,0,1,0,0,-1,0,2]                                
+#board = [-1,0,-1,0,2,1,0,0,2,0,1,-2,0,-1,0,2]                                
+#board = [-1,0,-1,-1,0,1,0,2,2,0,1,-2,-2,-1,0,2]                                
 #board = [-1,0,-1,-1,2,1,0,2,2,0,1,-2,-2,-1,0,2]                                
 #board = [-1,0,0,0,1,-1,-1,2,1,-2,-2,2,-1,-2,1,2]                               
 state = Eclipse(board)

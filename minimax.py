@@ -20,8 +20,8 @@ class Minimax(object):
 
     def minimax(self, parent):
         self.num += 1
-        if self.num % 10000:
-            print self.num
+        #if self.num % 10000:
+        #    print self.num
         if parent.end:
             parent.getScore()
             self.maxLevel = parent.setMaxLevel()
@@ -93,11 +93,5 @@ def printTree(parent):
     for child in parent.children:
         printTree(child)
 
-#board = [-1,0,-1,-1,2,1,0,2,2,0,1,-2,-2,-1,0,2]
-#board = [-1,0,0,0,1,-1,-1,2,1,-2,-2,2,-1,-2,1,2]
-#state = Eclipse(board)
-#minimax(state)
-#print state.state
-#print ""
-#print state.bestChild.state
+
 
