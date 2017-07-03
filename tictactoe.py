@@ -112,8 +112,8 @@ class TicTacToe(GameState):
             
 #==============================================================================
 
-XPlayer = True #Human player 
-OPlayer = False                                                   
+XPlayer = False #Human player 
+OPlayer = True                                                   
 xturn = True                                                                    
 gameover = False                                                                
 state = TicTacToe([-1,-1,-1,-1,-1,-1,-1,-1,-1])                            
@@ -129,6 +129,7 @@ while not gameover:
             minimax = Minimax()
             minimax.minimax(state)
             state = state.bestChild
+            state = TicTacToe(state.state)
             print "minimax called "+str(minimax.num) + " times"
             print minimax.maxLevel
     else:                          
@@ -139,7 +140,8 @@ while not gameover:
         else:
             minimax = Minimax()
             minimax.minimax(state)                                                          
-            state = state.bestChild                                                 
+            state = state.bestChild       
+            state = TicTacToe(state.state)
             print "minimax called "+str(minimax.num) + " times"
             print minimax.maxLevel
             
