@@ -26,6 +26,10 @@ class Minimax(object):
             parent.getScore()
             self.maxLevel = parent.setMaxLevel()
         else:
+            #if self.num > 80000:
+            #    pass
+                #parent.getChildren(True)
+            #else:
             if self.maxLevel is not None:
                 if parent.level < self.maxLevel:
                     parent.getChildren()

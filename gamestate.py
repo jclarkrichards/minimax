@@ -3,14 +3,13 @@ from random import randint
 class GameState(object):
     def __init__(self, state, level):
         self.state = state #represents this state 
-        #parent, children, and bestChild  are of type GameState
-        self.parent = None
+        #children and bestChild  are of type GameState
         self.children = []
         self.bestChild = None
         self.level = level #level this state was created on
         self.score = 0
         self.prescore = 0 #an initial score, not a final one
-        self.emptyVal = -1
+        self.emptyVal = -1 #how empty spaces on the board are defined
 
     def isEven(self, value):
         '''Checks whether value is odd or even.  False if odd'''
@@ -39,11 +38,8 @@ class GameState(object):
         
         #More than one child has the same best score
         if scores.count(self.score) > 1:
-            #levels = [child.level for child in self.children]
-            #print levels
             levels = self.getBestChildLevel()
             level = min(levels)
-            
             #If more than one child with best score was created on same level
             if levels.count(level) > 1:
                 num = levels.count(level)
@@ -75,6 +71,9 @@ class GameState(object):
         if self.state[i[0]] == self.state[i[1]] == self.state[i[2]] == val:
             return True
         return False
+
+    def twoPiecesMatch(self, i, val):
+        pass
 
     
 

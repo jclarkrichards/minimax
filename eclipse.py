@@ -3,17 +3,14 @@ from gamestate import GameState
 from minimax import Minimax
 
 #==============================================================================
-class Eclipse(GameState):
-    def __init__(self, state, level=0):
+class EclipseState(GameState):
+    def __init__(self, state, level=0, forceend=False):
         GameState.__init__(self, state, level)
-        self.emptyVal = 0
-        self.sunSilver = 1
-        self.sunGold = -1
-        self.moonSilver = 2
-        self.moonGold = -2
-        self.sun = [self.sunSilver, self.sunGold]
-        self.moon = [self.moonSilver, self.moonGold]
-
+        self.emptyVal = 0 #how empty spaces on the board are defined
+        #Each piece has two sides
+        self.sun = [1, -1]
+        self.moon = [2, -2]
+        #Possible winning lines
         self.lines = [[0,1,2],[1,2,3],[4,5,6],[5,6,7],
                       [8,9,10],[9,10,11],[12,13,14],[13,14,15],
                       [0,4,8],[4,8,12],[1,5,9],[5,9,13],
@@ -21,11 +18,11 @@ class Eclipse(GameState):
                       [1,6,11],[0,5,10],[5,10,15],[4,9,14],
                       [2,5,8],[3,6,9],[6,9,12],[7,10,13]]
         
-        self.checkEndState()
+        self.checkEndState(forceend)
         
     def checkWin(self):
         '''To win all pieces must be the same and all adjacent spaces
-        cannot be empty'''
+        cannot be empty (locked)'''
         sunwin = 0
         moonwin = 0
         
@@ -40,7 +37,7 @@ class Eclipse(GameState):
                     moonwin += 1
         return sunwin, moonwin
 
-    def checkEndState(self):
+    def checkEndState(self, forceend=False):
         '''End state if no empty spaces or either player wins'''
         self.end = False
         indices = self.emptySpaces()
@@ -51,7 +48,10 @@ class Eclipse(GameState):
         if sunwin or moonwin:
             self.end = True
 
-    def getChildren(self):
+        if forceend:
+            self.end = True
+
+    def getChildren(self, end=False):
         '''Get all possible children of this state'''
         if self.sunIsRoot():
             moonIndices = self.getPlayerIndices(self.moon)
@@ -69,14 +69,14 @@ class Eclipse(GameState):
                                 state[fi] = state[mi] * -1
                                 state[mi] = 0
                                 state[ei] = side
-                                self.children.append(Eclipse(state, level=self.level+1))
+                                self.children.append(EclipseState(state, level=self.level+1, forceend=end))
             else:
                 empty = self.emptySpaces()
                 for ei in empty:
                     for side in self.sun:
                         state = self.state[:]
                         state[ei] = side
-                        self.children.append(Eclipse(state, level=self.level+1))
+                        self.children.append(EclipseState(state, level=self.level+1, forceend=end))
 
         else:
             sunIndices = self.getPlayerIndices(self.sun)
@@ -93,14 +93,14 @@ class Eclipse(GameState):
                                 state[fi] = state[si] * -1
                                 state[si] = 0
                                 state[ei] = side
-                                self.children.append(Eclipse(state, level=self.level+1))
+                                self.children.append(EclipseState(state, level=self.level+1, forceend=end))
             else:
                 empty = self.emptySpaces()
                 for ei in empty:
                     for side in self.moon:
                         state = self.state[:]
                         state[ei] = side
-                        self.children.append(Eclipse(state, level=self.level+1))
+                        self.children.append(EclipseState(state, level=self.level+1, forceend=end))
 
         self.evaluateChildren()
         self.sortChildren()
@@ -111,9 +111,9 @@ class Eclipse(GameState):
     def getScore(self):
         '''Getting score assumes we have reached a true end state'''
         sunwin, moonwin = self.checkWin()
-        if sunwin > 0 and moonwin > 0:
+        if sunwin and moonwin:
             pass #TIE
-        else:
+        elif sunwin or moonwin:
             if self.sunIsRoot(self.level):
                 if sunwin:
                     self.score = 1
@@ -124,6 +124,8 @@ class Eclipse(GameState):
                     self.score = 1
                 elif sunwin:
                     self.score = -1
+        else:#Neither player wins (use a heuristic)
+            pass
 
     def checkLockedPieces(self, indices, val):
         '''Check if indices all match val and those indices are all locked'''
@@ -218,7 +220,7 @@ class Eclipse(GameState):
         return False
 
     def pruneChildren(self):
-        '''Prune child if prescore is above 4.  Basic and simple, but not the best.'''
+        '''Prune child if prescore is above 100'''
         if len(self.children) > 0:
             prescores = [c.prescore for c in self.children]
             #print len(prescores), len(self.children)
@@ -285,6 +287,7 @@ class Eclipse(GameState):
                                 else:
                                     child.prescore += 10
                             else:
+                                #if child.twoPiecesMatch(line, side):
                                 if (child.state[line[0]] == child.state[line[1]] == side or
                                     child.state[line[0]] == child.state[line[2]] == side or
                                     child.state[line[1]] == child.state[line[2]] == side):
@@ -324,7 +327,7 @@ board = [0,0,-1,0,2,1,0,0,2,0,1,0,0,-1,0,2]
 #board = [-1,0,-1,-1,0,1,0,2,2,0,1,-2,-2,-1,0,2]                                
 #board = [-1,0,-1,-1,2,1,0,2,2,0,1,-2,-2,-1,0,2]                                
 #board = [-1,0,0,0,1,-1,-1,2,1,-2,-2,2,-1,-2,1,2]                               
-state = Eclipse(board)
+state = EclipseState(board)
 minimax = Minimax()                                                         
 minimax.minimax(state)
 print minimax.num                                                                 
