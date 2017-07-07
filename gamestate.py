@@ -17,16 +17,17 @@ class GameState(object):
             return False
         return True
 
-    def getBestChildLevel(self):
+    def getBestChildLevel(self, children):
         '''Get the levels children were created.  We want to win fast.'''
         levels = []
-        for child in self.children:
+        for child in children:
             if child.bestChild is not None:
                 levels.append(child.bestChild.level)
             else:
                 levels.append(child.level)
         return levels
         
+                
     def getScoreFromChildren(self):
         '''Ask children for scores and choose the best child'''
         scores = [child.score for child in self.children]
@@ -38,25 +39,34 @@ class GameState(object):
         
         #More than one child has the same best score
         if scores.count(self.score) > 1:
-            levels = self.getBestChildLevel()
+            #Only use the children with best scores
+            children = self.filterChildrenByScore(self.score)
+            levels = self.getBestChildLevel(children)
             level = min(levels)
             #If more than one child with best score was created on same level
             if levels.count(level) > 1:
                 num = levels.count(level)
                 indices = []
-                for i in range(len(self.children)):
-                    if self.children[i].score == self.score:
+                for i in range(len(levels)):
+                    if levels[i] == level:
                         indices.append(i)
                 index = randint(0, len(indices)-1)
                 #print scores, levels
-                self.bestChild = self.children[indices[index]]
+                self.bestChild = children[indices[index]]
             else:
                 #print scores, levels
                 index = levels.index(level)
-                self.bestChild = self.children[index]
+                self.bestChild = children[index]
         else:
             index = scores.index(self.score)
             self.bestChild = self.children[index]
+
+    def filterChildrenByScore(self, score):
+        children = []
+        for child in self.children:
+            if child.score == score:
+                children.append(child)
+        return children
 
     def emptySpaces(self):
         '''Get indices of empty spaces'''
@@ -66,9 +76,10 @@ class GameState(object):
                 indices.append(i)
         return indices
 
+    
     def allPiecesMatch(self, i, val):
-        '''Check if all pieces at the indices match the val'''
-        if self.state[i[0]] == self.state[i[1]] == self.state[i[2]] == val:
+        '''Check if all pieces at the indices match the val and are not an empty space'''
+        if self.state[i[0]] == self.state[i[1]] == self.state[i[2]] == val != self.emptyVal:
             return True
         return False
 
