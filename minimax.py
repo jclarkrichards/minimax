@@ -9,7 +9,6 @@ class Minimax(object):
         self.num += 1
         if parent.end:
             parent.getScore()
-            #if parent.score == 100:
             self.maxLevel = parent.setMaxLevel(self.maxLevel)
         else:
             if self.maxLevel is not None:
@@ -17,6 +16,10 @@ class Minimax(object):
                     parent.getChildren()
             else:
                 parent.getChildren()
+            #parent.getChildren()
+            
+            #if parent.level != 0:
+            #    parent.chooseRandomChild()
 
             if len(parent.children) > 0:
                 for i, child in enumerate(parent.children):
@@ -27,7 +30,7 @@ class Minimax(object):
                 if parent.level == 0:
                     print len(parent.children)
                     print [child.score for child in parent.children]
-                    print [child.numFlips for child in parent.children]
+                #    print [child.numFlips for child in parent.children]
 
 
 

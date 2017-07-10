@@ -1,3 +1,4 @@
+import time
 from random import randint
 from gamestate import GameState
 from minimax import Minimax
@@ -19,6 +20,9 @@ class EclipseState(GameState):
         self.sun = [1, -1]
         self.moon = [2, -2]
         self.numFlips = 0
+        self.highScore = 100
+        self.lowScore = -100
+        self.randomPaths = False
         self.checkEndState(forceend)
         
     def checkWin(self):
@@ -65,11 +69,17 @@ class EclipseState(GameState):
             sunIndices = self.getFlippableIndices(sunIndices)
             self.createChildren(self.moon, sunIndices, end=end)
 
-        #self.numChildren = len(self.children)
-        self.sortChildren()
+        #self.sortChildren()
         self.pruneChildren()
         #self.evaluateChildren()
-        #self.sortChildren()
+        #if len(self.children) > 0 and len(self.emptySpaces()) > 6:
+        #    self.chooseRandomChild()
+
+    def chooseRandomChild(self):
+        '''Choose a random child and set as only child'''
+        if len(self.children) > 0:
+            index = randint(0, len(self.children) - 1)
+            self.children = [self.children[index]]
 
     def createChildren(self, parent, indices, end=False):
         '''Actual work of creating the children'''
@@ -104,14 +114,14 @@ class EclipseState(GameState):
             pass #No winners.  
         elif sunwin > moonwin:
             if self.sunIsRoot(self.level):
-                self.score = 100
+                self.score = self.highScore
             else:
-                self.score = -100
+                self.score = self.lowScore
         elif moonwin > sunwin:
             if self.sunIsRoot(self.level):
-                self.score = -100
+                self.score = self.lowScore
             else:
-                self.score = 100
+                self.score = self.highScore
 
     def checkLockedPieces(self, indices, val):
         '''Check if indices all match val and those indices are all locked'''
@@ -211,31 +221,30 @@ class EclipseState(GameState):
         '''If any of the children are winning end states, then get rid of all the other children.
         Except if this child is on an even level because then it is invalid since the other
         player will never choose this state.'''
-        flips = [child.numFlips for child in self.children]
-        upperFlip = (min(flips) + max(flips)) / 2
+        #flips = [child.numFlips for child in self.children]
+        #upperFlip = (min(flips) + max(flips)) / 2
+        #temp = []
+        #for child in self.children:
+        #    if child.numFlips < upperFlip:
+        #        temp.append(child)
+        #if len(temp) > 0:
+        #    self.children = temp
         temp = []
         for child in self.children:
-            if child.numFlips < upperFlip:
+            if child.end and child.score == self.lowScore and not self.isEven(child.level):
+                pass
+            else:
                 temp.append(child)
         if len(temp) > 0:
             self.children = temp
 
         for child in self.children:
-            if child.end and child.score == 100 and not self.isEven(child.level):
-                print "pruning child at " + str(child.level)
+            if ((child.end and child.score == self.highScore and not self.isEven(child.level)) or
+                (child.end and child.score == self.lowScore and self.isEven(child.level))):
+                #print "pruning child at " + str(child.level)
                 #self.bestChild = child
                 self.children = [child]
                 break
-        #If winning child not found, at least get rid of any losing children 
-        #if len(self.children) > 1:
-        #    temp = []
-        #    for child in self.children:
-        #        if child.score != -100:
-        #            temp.append(child)
-        #    if len(temp) > 0:
-        #        self.children = temp
-
-
  
     def sortChildren(self):
         '''Sort children based on numFlips.  Low to high.  Use bubble sort.'''
@@ -251,16 +260,6 @@ class EclipseState(GameState):
                     issorted = False
                 
 
-    #def evaluateChildren(self):
-    #    '''Evaluate children based on number of flips other player can make'''
-    #    if len(self.children) > 0:
-    #        if self.sunIsRoot():
-    #            for child in self.children:
-    #                self.prescore = child.totalNumFlips(True)
-    #        else:
-    #            for child in self.children:
-    #                self.prescore = child.totalNumFlips(False)
-
     def totalNumFlipsForOpponent(self):
         '''Get the total number of possible flips for a player.'''
         flips = 0
@@ -273,6 +272,7 @@ class EclipseState(GameState):
             flips += len(empty)
         return flips
 
+    """
     def evaluateChildren(self):
         '''Evaluate children based on line scores'''
         if len(self.children) > 0:
@@ -306,14 +306,15 @@ class EclipseState(GameState):
                                     child.state[line[0]] == child.state[line[2]] == side or
                                     child.state[line[1]] == child.state[line[2]] == side):
                                     child.prescore += 1
-                    
+    """
+             
     def setMaxLevel(self, maxLevel):
         '''Set the maximum level for minimax if this is a winning state.  
         The minimax object will call this method'''
         if self.score == 100 and not self.isEven(self.level):
-            print "set " + str(self.level - 1) + " as new level"
-            print self
-            print ""
+            #print "set " + str(self.level - 1) + " as new level"
+            #print self
+            #print ""
             return self.level - 1
         return maxLevel
 
@@ -330,22 +331,33 @@ class EclipseState(GameState):
     
 
 
-        
-#board = [0,0,-1,0,2,1,0,0,2,-1,0,0,2,-1,0,2]                                
+#board = [-1,0,-1,-1,0,1,0,2,2,0,1,-2,-2,-1,0,2]        
+#board = [0,0,-1,0,2,1,1,0,2,-1,0,0,2,-1,0,2]                                
 #board = [-1,0,-1,0,2,1,0,0,2,0,1,-2,0,-1,0,2]                                
 #board = [0,1,-1,-1,0,1,-2,2,2,0,1,-2,-2,-1,0,2]                                
 #board = [1,0,0,-1,2,-1,0,2,0,0,1,-2,-2,-1,0,2]                                
 #board = [-1,0,0,0,1,-1,-1,2,1,-2,-2,2,-1,-2,1,2]
 #board = [1,-2,0,0,-1,2,0,0,0,-1,0,0,0,0,0,0]
-board = [-1,2,0,0,-2,1,0,0,0,0,0,0,0,0,0,0]
+#board = [-1,2,0,0,-2,1,0,0,0,0,0,0,0,0,0,0]
+#board = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
+#Run Thru, I start
+board = [1,0,0,0,
+         1,2,-1,0,
+         1,2,0,0,
+         2,0,0,0]
 state = EclipseState(board)
 
 #state.getChildren()
 #print len(state.children)
 #for i in range(len(state.children)):
 #    print state.children[i].score 
-minimax = Minimax()                                                         
+minimax = Minimax()               
+start = time.time()                                          
 minimax.minimax(state)
+end = time.time()
+
+print "Elapsed Time = " + str(end-start)
 print minimax.num                                                                 
 print state                                                              
 print ""                                                                       
