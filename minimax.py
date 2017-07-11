@@ -29,7 +29,7 @@ class Minimax(object):
 
                 if parent.level == 0:
                     print len(parent.children)
-                    print [child.score for child in parent.children]
+                    print [child.invalid for child in parent.children]
                 #    print [child.numFlips for child in parent.children]
 
 

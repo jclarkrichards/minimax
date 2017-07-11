@@ -20,8 +20,9 @@ class EclipseState(GameState):
         self.sun = [1, -1]
         self.moon = [2, -2]
         self.numFlips = 0
-        self.highScore = 100
-        self.lowScore = -100
+        self.winScore = 100
+        self.loseScore = -100
+        self.invalid = False
         self.randomPaths = False
         self.checkEndState(forceend)
         
@@ -114,14 +115,14 @@ class EclipseState(GameState):
             pass #No winners.  
         elif sunwin > moonwin:
             if self.sunIsRoot(self.level):
-                self.score = self.highScore
+                self.score = self.winScore
             else:
-                self.score = self.lowScore
+                self.score = self.loseScore
         elif moonwin > sunwin:
             if self.sunIsRoot(self.level):
-                self.score = self.lowScore
+                self.score = self.loseScore
             else:
-                self.score = self.highScore
+                self.score = self.winScore
 
     def checkLockedPieces(self, indices, val):
         '''Check if indices all match val and those indices are all locked'''
@@ -217,6 +218,15 @@ class EclipseState(GameState):
     #-------------------------------------------------------------------
     #Below are optimization methods
     #-------------------------------------------------------------------
+    def loseStateRoot(self):
+        return self.end and self.score == self.loseScore and not self.isEven(self.level)
+    
+    def winStateRoot(self):
+        return self.end and self.score == self.winScore and not self.isEven(self.level)
+
+    def winStateOther(self):
+        return self.end and self.score == self.loseScore and self.isEven(self.level)
+
     def pruneChildren(self):
         '''If any of the children are winning end states, then get rid of all the other children.
         Except if this child is on an even level because then it is invalid since the other
@@ -230,22 +240,33 @@ class EclipseState(GameState):
         #if len(temp) > 0:
         #    self.children = temp
         temp = []
+
         for child in self.children:
-            if child.end and child.score == self.lowScore and not self.isEven(child.level):
-                pass
-            else:
+            if not child.loseStateRoot():
                 temp.append(child)
+            #else:
+            #    print child
+            #    print ""
+
+        #print len(temp)
         if len(temp) > 0:
             self.children = temp
 
         for child in self.children:
-            if ((child.end and child.score == self.highScore and not self.isEven(child.level)) or
-                (child.end and child.score == self.lowScore and self.isEven(child.level))):
+            if (child.winStateRoot()):# or
+                #(child.end and child.score == self.lowScore and self.isEven(child.level))):
                 #print "pruning child at " + str(child.level)
                 #self.bestChild = child
                 self.children = [child]
                 break
- 
+
+        for child in self.children:
+            if child.winStateOther():
+                self.invalid = True
+                self.children = [child]
+                break
+                
+        
     def sortChildren(self):
         '''Sort children based on numFlips.  Low to high.  Use bubble sort.'''
         issorted = False
@@ -342,10 +363,10 @@ class EclipseState(GameState):
 #board = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
 #Run Thru, I start
-board = [1,0,0,0,
-         1,2,-1,0,
-         1,2,0,0,
-         2,0,0,0]
+board = [1,2,0,0,
+         2,1,2,0,
+         0,2,1,0,
+         0,1,1,0]
 state = EclipseState(board)
 
 #state.getChildren()
@@ -362,3 +383,4 @@ print minimax.num
 print state                                                              
 print ""                                                                       
 print state.bestChild
+
