@@ -244,29 +244,15 @@ class EclipseState(GameState):
         for child in self.children:
             if not child.loseStateRoot():
                 temp.append(child)
-            #else:
-            #    print child
-            #    print ""
-
-        #print len(temp)
         if len(temp) > 0:
             self.children = temp
 
         for child in self.children:
-            if (child.winStateRoot()):# or
-                #(child.end and child.score == self.lowScore and self.isEven(child.level))):
-                #print "pruning child at " + str(child.level)
-                #self.bestChild = child
+            if (child.winStateRoot() or child.winStateOther()):
                 self.children = [child]
                 break
+            
 
-        for child in self.children:
-            if child.winStateOther():
-                self.invalid = True
-                self.children = [child]
-                break
-                
-        
     def sortChildren(self):
         '''Sort children based on numFlips.  Low to high.  Use bubble sort.'''
         issorted = False
@@ -363,24 +349,32 @@ class EclipseState(GameState):
 #board = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
 #Run Thru, I start
-board = [1,2,0,0,
-         2,1,2,0,
-         0,2,1,0,
-         0,1,1,0]
+board = [-2,-2,-1,2,
+         2,-1,2,1,
+         1,0,2,-1,
+         -2,-1,-1,0]
+
 state = EclipseState(board)
 
-#state.getChildren()
 #print len(state.children)
 #for i in range(len(state.children)):
 #    print state.children[i].score 
 minimax = Minimax()               
 start = time.time()                                          
-minimax.minimax(state)
+#minimax.minimax(state)
+state.getChildren()
+win = False
+while not win:
+    index = randint(0, len(state.children)-1)
+    win = minimax.randomPath(state.children[index])
 end = time.time()
 
 print "Elapsed Time = " + str(end-start)
 print minimax.num                                                                 
 print state                                                              
-print ""                                                                       
-print state.bestChild
+print ""
+print state.children[index]
+print ""
+print win
+#print state.bestChild
 

@@ -27,14 +27,23 @@ class Minimax(object):
                     self.minimax(child)
                 parent.getScoreFromChildren()
 
-                if parent.level == 0:
-                    print len(parent.children)
-                    print [child.invalid for child in parent.children]
-                #    print [child.numFlips for child in parent.children]
+                #if parent.level == 0:
+                #    print len(parent.children)
+                #    print [child.score for child in parent.children]
+                #    print [child.bestChild.level for child in parent.children]
 
 
-
-
+    def randomPath(self, parent):
+        self.num += 1
+        if parent.end:
+            if parent.score == parent.winScore:
+                return True
+            return False
+        else:
+            parent.getChildren()
+            parent.chooseRandomChild()
+            win = self.randomPath(parent.children[0])
+            return win
 
 
 
