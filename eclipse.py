@@ -2,7 +2,7 @@ import time
 from random import randint
 from gamestate import GameState
 from minimax import Minimax
-
+import numpy as np
 #Winning lines
 LINES = ((0,1,2), (1,2,3), (4,5,6), (5,6,7),
          (8,9,10), (9,10,11), (12,13,14), (13,14,15),
@@ -70,6 +70,7 @@ class EclipseState(GameState):
             sunIndices = self.getFlippableIndices(sunIndices)
             self.createChildren(self.moon, sunIndices, end=end)
 
+        #self.removeDuplicateChildren()
         #self.sortChildren()
         self.pruneChildren()
         #self.evaluateChildren()
@@ -98,6 +99,7 @@ class EclipseState(GameState):
                             state[fi] = state[i] * -1
                             state[i] = 0
                             state[ei] = side
+                            
                             self.children.append(EclipseState(state, level=self.level+1, forceend=end))
         else:#No flippable pieces so just place own piece
             empty = self.emptySpaces()
@@ -112,6 +114,7 @@ class EclipseState(GameState):
         '''Getting score assumes we have reached a true end state'''
         sunwin, moonwin = self.checkWin()
         if sunwin == moonwin:
+            #self.score = self.winScore - self.level * 5
             pass #No winners.  
         elif sunwin > moonwin:
             if self.sunIsRoot(self.level):
@@ -123,6 +126,7 @@ class EclipseState(GameState):
                 self.score = self.loseScore
             else:
                 self.score = self.winScore
+
 
     def checkLockedPieces(self, indices, val):
         '''Check if indices all match val and those indices are all locked'''
@@ -213,7 +217,33 @@ class EclipseState(GameState):
                 return True
         return False
 
+    def rotate(self, state, rot):
+        A = np.array(state).reshape(4,4)
+        return list(np.rot90(A, rot).flatten())
 
+    def removeDuplicateChildren(self):
+        '''Remove children that are rotationally equivalent'''
+        allstates = [child.state for child in self.children]
+        temp = []
+        for c in range(len(self.children)):
+            indices = [c]
+            for r in range(1, 4):
+                cr = self.rotate(self.children[c].state, r)
+                if cr in allstates:
+                    indices.append(allstates.index(cr))
+            temp.append(indices)
+            
+        junk = []
+        for t in temp:
+            t.sort()
+            junk.append(t[0])
+        indices = list(set(junk))
+        newkids = []
+        for i in range(len(self.children)):
+            if i in junk:
+                newkids.append(self.children[i])
+        self.children = newkids
+        #self.children = temp
 
     #-------------------------------------------------------------------
     #Below are optimization methods
@@ -227,6 +257,15 @@ class EclipseState(GameState):
     def winStateOther(self):
         return self.end and self.score == self.loseScore and self.isEven(self.level)
 
+    def loseStateOther(self):
+        return self.end and self.score == self.winScore and self.isEven(self.level)
+
+    def invalidState(self):
+        if (self.score == self.winScore and self.isEven(self.level) or 
+            self.score == self.loseScore and not self.isEven(self.level)):
+            return True
+        return False
+
     def pruneChildren(self):
         '''If any of the children are winning end states, then get rid of all the other children.
         Except if this child is on an even level because then it is invalid since the other
@@ -239,11 +278,15 @@ class EclipseState(GameState):
         #        temp.append(child)
         #if len(temp) > 0:
         #    self.children = temp
+
         temp = []
 
         for child in self.children:
-            if not child.loseStateRoot():
+            if not child.invalidState():
                 temp.append(child)
+            #if child.winStateRoot():
+        #    if not child.loseStateRoot():
+        #        temp.append(child)
         if len(temp) > 0:
             self.children = temp
 
@@ -318,11 +361,12 @@ class EclipseState(GameState):
     def setMaxLevel(self, maxLevel):
         '''Set the maximum level for minimax if this is a winning state.  
         The minimax object will call this method'''
-        if self.score == 100 and not self.isEven(self.level):
-            #print "set " + str(self.level - 1) + " as new level"
-            #print self
-            #print ""
-            return self.level - 1
+        if self.winStateRoot():
+        #if self.score == self.winScore and not self.isEven(self.level):
+            print "set " + str(self.level - 2) + " as new level"
+            print self
+            print ""
+            return self.level - 2
         return maxLevel
 
 
@@ -345,14 +389,15 @@ class EclipseState(GameState):
 #board = [1,0,0,-1,2,-1,0,2,0,0,1,-2,-2,-1,0,2]                                
 #board = [-1,0,0,0,1,-1,-1,2,1,-2,-2,2,-1,-2,1,2]
 #board = [1,-2,0,0,-1,2,0,0,0,-1,0,0,0,0,0,0]
-#board = [-1,2,0,0,-2,1,0,0,0,0,0,0,0,0,0,0]
-#board = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-
+#board = [-1,2,2,0,0,-1,0,0,0,0,0,0,0,0,0,0]
+board = [-2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+#board = [2,-1,2,1,0,1,-1,0,2,2,1,2,0,-1,2,0]
 #Run Thru, I start
-board = [-2,-2,-1,2,
-         2,-1,2,1,
-         1,0,2,-1,
-         -2,-1,-1,0]
+
+#board = [1,2,1,1,
+#         -2,-2,2,-1,
+#         -2,-1,0,2,
+#         0,0,0,1]
 
 state = EclipseState(board)
 
@@ -361,20 +406,34 @@ state = EclipseState(board)
 #    print state.children[i].score 
 minimax = Minimax()               
 start = time.time()                                          
-#minimax.minimax(state)
-state.getChildren()
-win = False
-while not win:
-    index = randint(0, len(state.children)-1)
-    win = minimax.randomPath(state.children[index])
+minimax.minimax(state)
 end = time.time()
 
+"""
+state.getChildren()
+win = False
+wins = [0]*len(state.children)
+for i in range(5000):
+    print i
+#while not win:
+    index = randint(0, len(state.children)-1)
+    win = minimax.randomPath(state.children[index])
+    if win:
+        wins[index] += 1
+end = time.time()
+bestIndex = wins.index(max(wins))
+print wins
+print ""
+print bestIndex
+print ""
+print state.children[bestIndex]
+print ""
+print win
+
+"""
 print "Elapsed Time = " + str(end-start)
 print minimax.num                                                                 
 print state                                                              
 print ""
-print state.children[index]
-print ""
-print win
-#print state.bestChild
+print state.bestChild
 

@@ -5,7 +5,7 @@ class Minimax(object):
         self.num = 0
 
     def minimax(self, parent):
-        #print "LEVEL "+ str(parent.level)
+        print "LEVEL "+ str(parent.level)
         self.num += 1
         if parent.end:
             parent.getScore()
@@ -14,6 +14,8 @@ class Minimax(object):
             if self.maxLevel is not None:
                 if parent.level < self.maxLevel:
                     parent.getChildren()
+                #elif parent.level == self.maxLevel:
+                #    parent.score = parent.loseScore
             else:
                 parent.getChildren()
             #parent.getChildren()
@@ -27,9 +29,9 @@ class Minimax(object):
                     self.minimax(child)
                 parent.getScoreFromChildren()
 
-                #if parent.level == 0:
+                if parent.level == 0:
                 #    print len(parent.children)
-                #    print [child.score for child in parent.children]
+                    print [child.score for child in parent.children]
                 #    print [child.bestChild.level for child in parent.children]
 
 
@@ -44,18 +46,3 @@ class Minimax(object):
             parent.chooseRandomChild()
             win = self.randomPath(parent.children[0])
             return win
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

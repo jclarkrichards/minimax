@@ -32,10 +32,12 @@ class GameState(object):
         '''Ask children for scores and choose the best child'''
         scores = [child.score for child in self.children]
         #print scores
-        if self.isEven(self.level): #level is even
-            self.score = max(scores)
-        else: #level is even
-            self.score = min(scores)
+        self.score = max(scores)
+
+        #if self.isEven(self.level): #level is even
+        #    self.score = max(scores)
+        #else: #level is even
+        #    self.score = min(scores)
         
         #More than one child has the same best score
         if scores.count(self.score) > 1:
@@ -43,6 +45,7 @@ class GameState(object):
             children = self.filterChildrenByScore(self.score)
             levels = self.getBestChildLevel(children)
             level = min(levels)
+            #print levels
             #If more than one child with best score was created on same level
             if levels.count(level) > 1:
                 num = levels.count(level)
